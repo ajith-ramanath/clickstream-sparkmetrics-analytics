@@ -1,0 +1,192 @@
+{
+    "trasaction_id": {
+        "type": "string",
+        "description": "Transaction ID",
+        "mode": "NULLABLE"
+    },
+    "target_date": {
+        "type": "date",
+        "description": "Target date",
+        "mode": "NULLABLE"
+    },
+    "airflow_node": {
+        "type": "string",
+        "description": "Airflow node",
+        "mode": "NULLABLE"
+    },
+    "dataset_name": {
+        "type": "string",
+        "description": "Dataset name",
+        "mode": "NULLABLE"
+    },
+    "successful_task_count": {
+        "type": "INT64",
+        "description": "Number of successful tasks",
+        "mode": "NULLABLE"
+    },
+    "number_of_partitions": {
+        "type": "INT64",
+        "description": "Number of partitions",
+        "mode": "NULLABLE"
+    },
+    "written_data_per_partition_in_mb": {
+        "type": "FLOAT64",
+        "description": "Written data per partition in MB",
+        "mode": "NULLABLE"
+    },
+    "execution_time_in_minutes": {
+        "type": "FLOAT64",
+        "description": "Execution time in minutes",
+        "mode": "NULLABLE"
+    },
+    "linear_processing_time": {
+        "type": "INT64",
+        "description": "Linear processing time",
+        "mode": "NULLABLE"
+    },
+    "execution_started_at": {
+        "type": "timestamp",
+        "description": "Execution started at",
+        "mode": "NULLABLE"
+    },
+    "execution_finished_at": {
+        "type": "timestamp",
+        "description": "Execution finished at",
+        "mode": "NULLABLE"
+    },
+    "skew_ratio": {
+        "type": "FLOAT64",
+        "description": "Skew ratio",
+        "mode": "NULLABLE"
+    },
+    "read_data_skew_ratio": {
+        "type": "FLOAT64",
+        "description": "Read data skew ratio",
+        "mode": "NULLABLE"
+    },
+    "written_data_skew_ratio": {
+        "type": "FLOAT64",
+        "description": "Written data skew ratio",
+        "mode": "NULLABLE"
+    },
+    "stages_count": {
+        "type": "INT64",
+        "description": "Stages count",
+        "mode": "NULLABLE"
+    },
+    "skewed_stages_count": {
+        "type": "INT64",
+        "description": "Skewed stages count",
+        "mode": "NULLABLE"
+    },
+    "write_stage_skew_ratio": {
+        "type": "FLOAT64",
+        "description": "Write stage skew ratio",
+        "mode": "NULLABLE"
+    },
+    "write_stage_linear_processing_time": {
+        "type": "FLOAT64",
+        "description": "Write stage linear processing time",
+        "mode": "NULLABLE"
+    },
+    "write_stage_execution_time_in_minutes": {
+        "type": "FLOAT64",
+        "description": "Write stage execution time in minutes",
+        "mode": "NULLABLE"
+    },
+    "write_stage_max_task_execution_time_minutes": {
+        "type": "FLOAT64",
+        "description": "Write stage max task execution time minutes",
+        "mode": "NULLABLE"
+    },
+    "max_task_execution_time_minutes": {
+        "type": "FLOAT64",
+        "description": "Max task execution time minutes",
+        "mode": "NULLABLE"
+    },
+    "read_data_in_gb": {
+        "type": "FLOAT64",
+        "description": "Read data in GB",
+        "mode": "NULLABLE"
+    },
+    "written_data_in_gb": {
+        "type": "FLOAT64",
+        "description": "Written data in GB",
+        "mode": "NULLABLE"
+    },
+    "number_of_written_records": {
+        "type": "INT64",
+        "description": "Number of written records",
+        "mode": "NULLABLE"
+    },
+    "shuffle_read_data_in_gb": {
+        "type": "FLOAT64",
+        "description": "Shuffle read data in GB",
+        "mode": "NULLABLE"
+    },
+    "shuffle_written_data_in_gb": {
+        "type": "FLOAT64",
+        "description": "Shuffle write data in GB",
+        "mode": "NULLABLE"
+    },
+    "spilled_to_disk_gb": {
+        "type": "FLOAT64",
+        "description": "Spilled to disk data in GB",
+        "mode": "NULLABLE"
+    },
+    "memory_spilled_gb": {
+        "type": "FLOAT64",
+        "description": "Memory spilled data in GB",
+        "mode": "NULLABLE"
+    },
+    "successful_executions_count": {
+        "type": "INT64",
+        "description": "Successful executions count",
+        "mode": "REQUIRED"
+    },
+    "failed_executions_count": {
+        "type": "INT64",
+        "description": "Failed executions count",
+        "mode": "REQUIRED"
+    },
+    "failed_steps_count": {
+        "type": "INT64",
+        "description": "Failed steps count",
+        "mode": "NULLABLE"
+    },
+    "failed_executions_linear_processing_time_total": {
+        "type": "INT64",
+        "description": "Failed executions linear processing time",
+        "mode": "NULLABLE"
+    },
+    "failed_step_linear_processing_time_total": {
+        "type": "INT64",
+        "description": "Failed step linear processing time",
+        "mode": "NULLABLE"
+    },
+    "failed_stages_count": {
+        "type": "INT64",
+        "description": "Failed stages count",
+        "mode": "NULLABLE"
+    },
+    "failure_reasons": {
+        "type": "ARRAY<STRING>",
+        "description": "Failure reasons",
+        "mode": "REQUIRED"
+    },
+    "committed_node": {
+        "type": "string",
+        "description": "Committed node",
+        "mode": "NULLABLE"
+    },
+    "airflow_nodes_count": {
+        "type": "INT64",
+        "description": "Airflow nodes",
+        "mode": "NULLABLE"
+    },
+    "is_committed_node": {
+        "type": "boolean",
+        "description": "Is committed node",
+        "mode": "NULLABLE"
+    }
+}

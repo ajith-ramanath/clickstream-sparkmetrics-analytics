@@ -1,0 +1,89 @@
+{
+    "array": [
+        {
+            "mode": "NULLABLE",
+            "name": "prometl_queried_at",
+            "type": "TIMESTAMP"
+        },
+        {
+            "mode": "NULLABLE",
+            "name": "prometl_stack_id",
+            "type": "STRING"
+        },
+        {
+            "mode": "NULLABLE",
+            "name": "prometl_country",
+            "type": "STRING"
+        },
+        {
+            "mode": "NULLABLE",
+            "name": "prometl_service",
+            "type": "STRING"
+        },
+        {
+            "mode": "NULLABLE",
+            "name": "prometl_environment",
+            "type": "STRING"
+        },
+        {
+            "mode": "NULLABLE",
+            "name": "prometl_value",
+            "type": "NUMERIC"
+        },
+        {
+            "mode": "REQUIRED",
+            "name": "prometl_datapoint_version",
+            "type": "INT64"
+        },
+        {
+            "mode": "NULLABLE",
+            "name": "prometl_id",
+            "type": "STRING"
+        },
+        {
+            "mode": "NULLABLE",
+            "name": "series_event_service_name",
+            "type": "STRING"
+        },
+        {
+            "mode": "NULLABLE",
+            "name": "prometl_name",
+            "type": "STRING"
+        },
+        {
+            "mode": "NULLABLE",
+            "name": "series_event_processed_at",
+            "type": "TIMESTAMP"
+        },
+        {
+            "mode": "NULLABLE",
+            "name": "prometl_prototype",
+            "type": "STRING"
+        },
+        {
+            "mode": "NULLABLE",
+            "name": "series_event_prototype",
+            "type": "STRING"
+        },
+        {
+            "mode": "NULLABLE",
+            "name": "series_event_metadata_id",
+            "type": "STRING"
+        },
+        {
+            "mode": "NULLABLE",
+            "name": "prometl_timestamp",
+            "type": "TIMESTAMP"
+        },
+        {
+            "mode": "NULLABLE",
+            "name": "series_event_cid",
+            "type": "STRING"
+        },
+        {
+            "mode": "NULLABLE",
+            "name": "series_event_produced_at",
+            "type": "TIMESTAMP"
+        }
+    ]
+}

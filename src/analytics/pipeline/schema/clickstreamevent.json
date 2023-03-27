@@ -1,0 +1,29 @@
+{
+	"platform": "string",
+	"id": "uuid",
+	"os_version": "integer",
+	"device_model": "string",
+	"app_version": "string",
+	"event_type": "string",
+	"session_id": "long",
+	"customer_id": "uuid",
+	"uploaded_at": "timestamp",
+	"device_manufacturer": "string",
+	"metric_name": "string",
+	"device_id": "uuid",
+	"occurred_at": "timestamp",
+	"language": "string",
+	"received_at": "timestamp",
+	"event_timestamp": "timestamp",
+	"received_at_date": "date",
+	"event_properties": 
+        {
+            "flow": "string",
+            "owner": "string",
+            "entity-name": "string",
+            "authentication-type": "string",
+            "package": "string",
+            "origin": "string",
+            "package-owner": "string"
+        }
+}

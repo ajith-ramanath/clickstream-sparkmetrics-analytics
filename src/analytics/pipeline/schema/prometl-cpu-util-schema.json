@@ -1,0 +1,70 @@
+{
+    "prometl_queried_at": {
+        "type": "TIMESTAMP",
+        "mode": "NULLABLE"
+    },
+    "prometl_stack_id": {
+        "type": "STRING",
+        "mode": "NULLABLE"
+    },
+    "prometl_country": {
+        "type": "STRING",
+        "mode": "NULLABLE"
+    },
+    "prometl_service": {
+        "type": "STRING",
+        "mode": "NULLABLE"
+    },
+    "prometl_environment": {
+        "type": "STRING",
+        "mode": "NULLABLE"
+    },
+    "prometl_value": {
+        "type": "NUMERIC",
+        "mode": "NULLABLE"
+    },
+    "prometl_datapoint_version": {
+        "type": "INT64",
+        "mode": "REQUIRED"
+    },
+    "prometl_id": {
+        "type": "STRING",
+        "mode": "NULLABLE"
+    },
+    "series_event_service_name": {
+        "type": "STRING",
+        "mode": "NULLABLE"
+    },
+    "prometl_name": {
+        "type": "STRING",
+        "mode": "NULLABLE"
+    },
+    "series_event_processed_at": {
+        "type": "TIMESTAMP",
+        "mode": "NULLABLE"
+    },
+    "prometl_prototype": {
+        "type": "STRING",
+        "mode": "NULLABLE"
+    },
+    "series_event_prototype": {
+        "type": "STRING",
+        "mode": "NULLABLE"
+    },
+    "series_event_metadata_id": {
+        "type": "STRING",
+        "mode": "NULLABLE"
+    },
+    "prometl_timestamp": {
+        "type": "TIMESTAMP",
+        "mode": "NULLABLE"
+    },
+    "series_event_cid": {
+        "type": "STRING",
+        "mode": "NULLABLE"
+    },
+    "series_event_produced_at": {
+        "type": "TIMESTAMP",
+        "mode": "NULLABLE"
+    }
+}
