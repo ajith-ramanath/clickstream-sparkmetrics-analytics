@@ -1,0 +1,8 @@
+{
+    "source" : "job/id",
+    "logical-type" : "string",
+    "type" : "direct",
+    "renamed" : "job__id",
+    "clearance" : "general",
+    "cardinality" : "one"
+}
