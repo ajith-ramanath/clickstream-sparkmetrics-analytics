@@ -35,12 +35,24 @@ def main(args: Array[String]) {
     // Create a DataStream
     val stream = env.addSource(kafkaConsumer)
 
-    // Process the data
+    // Process the json data, split into different tables based on the event type
     val processedStream = stream
-        .map(x => (x, 1))
+        .map { x => 
+            val json = parse(x)
+            val eventType = (json \ "event_type").extract[String]
+            val eventTime = (json \ "event_time").extract[String]
+            val event = (json \ "event").extract[String]
+            (eventType, eventTime, event)
+        }
         .keyBy(0)
         .window(TumblingProcessingTimeWindows.of(Time.seconds(5)))
-        .sum(1)
+        .apply { (key, window, events, out: Collector[(String, String, String)]) => 
+            val eventType = key
+            val eventTime = events.map(_._2).mkString(",")
+            val event = events.map(_._3).mkString(",")
+            out.collect((eventType, eventTime, event))
+        }
+    
 
     // Print the result
     processedStream.print()

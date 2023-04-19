@@ -1,5 +1,5 @@
 {
-    "source" : "job/id",
+    "source" : "string",
     "logical-type" : "string",
     "type" : "direct",
     "renamed" : "job__id",
