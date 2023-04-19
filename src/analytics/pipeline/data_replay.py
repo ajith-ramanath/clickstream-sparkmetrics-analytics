@@ -112,7 +112,7 @@ def main():
 
     try:
         # Assume role
-        credentials = assume_role(args.role, "data_replay")
+        credentials = assume_role(args.role, args.session)
 
         # Read S3 folder
         object_keys = read_s3_folder(args.bucket, args.folder, credentials)
