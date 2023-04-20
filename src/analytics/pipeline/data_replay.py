@@ -46,7 +46,6 @@ def read_s3_folder_and_create_pd(bucket, folder, assumed_role, region):
             'key': assumed_role['Credentials']['AccessKeyId'],
             'secret': assumed_role['Credentials']['SecretAccessKey'],
             'token': assumed_role['Credentials']['SessionToken'],
-            'region_name': region,
             'filesystem': s3
         })
 
