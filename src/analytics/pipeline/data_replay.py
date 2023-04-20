@@ -27,7 +27,7 @@ def assume_role(role_arn, role_session_name):
     return assumed_role_object
 
 # Read from the S3 folder and return the keys using the temporary credentials
-def read_s3_folder_and_create_pd(bucket, folder, assumed_role, region):
+def read_s3_and_send_msk(bucket, folder, assumed_role, region, kafka_cluster_arn, kafka_partition_key):
 
     os.environ['AWS_DEFAULT_REGION'] = region
 
@@ -40,10 +40,17 @@ def read_s3_folder_and_create_pd(bucket, folder, assumed_role, region):
         )
 
     # Specify the S3 path for the Parquet file(s)
-    s3_path = bucket + '/' + folder
+    path = bucket + '/' + folder
+    s3_path = 's3://' + path
 
-    # Use Pandas to read the Parquet file(s) from S3
-    df = pd.read_parquet(s3_path, engine='pyarrow', filesystem='s3://')
+    # List the files in the S3 path
+    files = s3.ls(s3_path)
+
+    for file in files:
+        # Use Pandas to read the Parquet file(s) from S3
+        df = pd.read_parquet(path + file, engine='pyarrow', filesystem='s3://')
+        df.head()
+        #send_data_msk(df, kafka_cluster_arn, kafka_partition_key)
 
     # Return the dataframe
     return df
@@ -107,10 +114,10 @@ def main():
         assumed_role = assume_role(args.role, args.session)
 
         # Read S3 folder
-        df = read_s3_folder_and_create_pd(args.bucket, args.folder, assumed_role, args.region)
+        df = read_s3_and_send_msk(args.bucket, args.folder, assumed_role, args.region, args.kafka_cluster_arn, args.kafka_partition_key)
 
         # Send data to Kafka
-        send_data_msk(df, args.kafka_cluster_arn, args.kafka_partition_key)
+        # send_data_msk(df, args.kafka_cluster_arn, args.kafka_partition_key)
 
     except Exception as e:
         logging.exception("Error in data replay")
