@@ -5,6 +5,7 @@ from botocore.exceptions import ClientError
 import argparse
 import json
 import s3fs
+import os
 
 # Function to assume role and get temporary credentials
 def assume_role(role_arn, role_session_name):
@@ -28,20 +29,21 @@ def assume_role(role_arn, role_session_name):
 # Read from the S3 folder and return the keys using the temporary credentials
 def read_s3_folder_and_create_pd(bucket, folder, assumed_role, region):
 
+    os.environ['AWS_DEFAULT_REGION'] = region
+
     # Create an S3 filesystem object using the assumed role credentials
     s3 = s3fs.S3FileSystem(
             anon=False,
             key=assumed_role['Credentials']['AccessKeyId'],
             secret=assumed_role['Credentials']['SecretAccessKey'],
             token=assumed_role['Credentials']['SessionToken'],
-            region_name=region
         )
 
     # Specify the S3 path for the Parquet file(s)
-    s3_path = 's3://' + bucket + '/' + folder
+    s3_path = bucket + '/' + folder
 
     # Use Pandas to read the Parquet file(s) from S3
-    df = pd.read_parquet(s3_path, engine='pyarrow', fs=s3)
+    df = pd.read_parquet(s3_path, engine='pyarrow', filesystem='s3://')
 
     # Return the dataframe
     return df
@@ -79,7 +81,7 @@ def send_data_msk(df, kafka_cluster_arn, kafka_partition_key):
 
 # main function
 def main():
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.INFO)
     logging.info("Starting data replay")
 
     # Arguments parsing
