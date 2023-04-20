@@ -97,6 +97,7 @@ def main():
     parser.add_argument("--folder", help="S3 folder")
     
     # Argument - role ARN to assume
+    parser.add_argument("--region", help="AWS region")
     parser.add_argument("--role", help="Role to assume")
     parser.add_argument("--session", help="Session name")
 
@@ -111,7 +112,7 @@ def main():
         assumed_role = assume_role(args.role, args.session)
 
         # Read S3 folder
-        df = read_s3_folder_and_create_pd(args.bucket, args.folder, assumed_role)
+        df = read_s3_folder_and_create_pd(args.bucket, args.folder, assumed_role, args.region)
 
         # Send data to Kafka
         send_data_msk(df, args.kafka_cluster_arn, args.kafka_partition_key)
