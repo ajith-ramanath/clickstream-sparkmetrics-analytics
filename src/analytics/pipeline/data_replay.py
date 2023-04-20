@@ -41,13 +41,7 @@ def read_s3_folder_and_create_pd(bucket, folder, assumed_role, region):
     s3_path = 's3://' + bucket + '/' + folder
 
     # Use Pandas to read the Parquet file(s) from S3
-    df = pd.read_parquet(s3_path, storage_options={
-            'anon': False,
-            'key': assumed_role['Credentials']['AccessKeyId'],
-            'secret': assumed_role['Credentials']['SecretAccessKey'],
-            'token': assumed_role['Credentials']['SessionToken'],
-            'filesystem': s3
-        })
+    df = pd.read_parquet(s3_path, engine='pyarrow', fs=s3)
 
     # Return the dataframe
     return df
