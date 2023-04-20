@@ -4,9 +4,14 @@ import pandas as pd
 from botocore.exceptions import ClientError
 import argparse
 import json
+import s3fs
 
 # Function to assume role and get temporary credentials
 def assume_role(role_arn, role_session_name):
+
+    logging.debug("Assuming role: %s", role_arn)
+    logging.debug("Role session name: %s", role_session_name)
+
     # Create an STS client object that represents a live connection to the
     # STS service.
     sts_client = boto3.client("sts")
@@ -17,45 +22,36 @@ def assume_role(role_arn, role_session_name):
         RoleArn=role_arn, RoleSessionName=role_session_name
     )
 
-    # From the response that contains the assumed role, get the temporary
-    # credentials that can be used to make subsequent API calls
-    credentials = assumed_role_object["Credentials"]
-
-    return credentials
+    # Return the assumed role 
+    return assumed_role_object
 
 # Read from the S3 folder and return the keys using the temporary credentials
-def read_s3_folder(bucket, folder, credentials):
-    # Create a new S3 client object using the temporary credentials.
-    s3_client = boto3.client("s3", aws_access_key_id=credentials["AccessKeyId"], aws_secret_access_key=credentials["SecretAccessKey"], aws_session_token=credentials["SessionToken"])
+def read_s3_folder_and_create_pd(bucket, folder, assumed_role, region):
 
-    # List the objects in the S3 bucket.
-    objects = s3_client.list_objects(Bucket=bucket, Prefix=folder)
+    # Create an S3 filesystem object using the assumed role credentials
+    s3 = s3fs.S3FileSystem(
+            anon=False,
+            key=assumed_role['Credentials']['AccessKeyId'],
+            secret=assumed_role['Credentials']['SecretAccessKey'],
+            token=assumed_role['Credentials']['SessionToken'],
+            region_name=region
+        )
 
-    # Read the contents of one of the objects.
-    object_keys = []
-    for obj in objects["Contents"]:
-        object_keys.append(obj["Key"])
+    # Specify the S3 path for the Parquet file(s)
+    s3_path = 's3://' + bucket + '/' + folder
 
-    return object_keys
+    # Use Pandas to read the Parquet file(s) from S3
+    df = pd.read_parquet(s3_path, storage_options={
+            'anon': False,
+            'key': assumed_role['Credentials']['AccessKeyId'],
+            'secret': assumed_role['Credentials']['SecretAccessKey'],
+            'token': assumed_role['Credentials']['SessionToken'],
+            'region_name': region,
+            'filesystem': s3
+        })
 
-
-# Function that sends data to Kafka
-def data_replay(object_keys, kafka_cluster_arn, kafka_partition_key, credentials, bucket):
-    # Create a new S3 client object using the temporary credentials.
-
-    s3_client = boto3.client("s3", aws_access_key_id=credentials["AccessKeyId"], aws_secret_access_key=credentials["SecretAccessKey"], aws_session_token=credentials["SessionToken"])
-
-    # Define the dataframe
-    df = pd.DataFrame()
-
-    # Loop through the object keys
-    for key in object_keys:
-        # Read the contents of one of the objects.
-        obj = s3_client.get_object(Bucket=bucket, Key=key)
-        df = pd.read_parquet(obj["Body"])
-
+    # Return the dataframe
     return df
-
 
 # Function that sends pandas dataframe to Kafka
 def send_data_msk(df, kafka_cluster_arn, kafka_partition_key):
@@ -112,13 +108,10 @@ def main():
 
     try:
         # Assume role
-        credentials = assume_role(args.role, args.session)
+        assumed_role = assume_role(args.role, args.session)
 
         # Read S3 folder
-        object_keys = read_s3_folder(args.bucket, args.folder, credentials)
-
-        # Replay data to Kafka
-        df = data_replay(object_keys, args.kafka_cluster_arn, args.kafka_partition_key, credentials, args.bucket)
+        df = read_s3_folder_and_create_pd(args.bucket, args.folder, assumed_role)
 
         # Send data to Kafka
         send_data_msk(df, args.kafka_cluster_arn, args.kafka_partition_key)
