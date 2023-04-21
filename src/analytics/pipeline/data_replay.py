@@ -24,7 +24,7 @@ def assume_role(role_arn, role_session_name):
     )
 
     logging.debug("Assumed role: %s", assumed_role_object)
-    
+
     # Return the assumed role
     return assumed_role_object
 
@@ -135,7 +135,7 @@ def main():
     parser.add_argument("--threads", help="Number of threads", type=int, default=16)
 
     args = parser.parse_args()
-    if args.thread is None or args.thread < 16:
+    if args.threads is None or args.threads < 16:
         # Want a min of 16 threads
         logging.info("Threads is less than 16. Setting it to 16")
         args.threads = 16
