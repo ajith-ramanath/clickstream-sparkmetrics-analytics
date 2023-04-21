@@ -3,9 +3,9 @@ import logging
 import pandas as pd
 from botocore.exceptions import ClientError
 import argparse
-import json
 import s3fs
 import os
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # Function to assume role and get temporary credentials
 def assume_role(role_arn, role_session_name):
@@ -26,9 +26,8 @@ def assume_role(role_arn, role_session_name):
     # Return the assumed role 
     return assumed_role_object
 
-# Read from the S3 folder and return the keys using the temporary credentials
-def read_s3_and_send_msk(bucket, folder, assumed_role, region, kafka_cluster_arn, kafka_partition_key):
-
+# S3 count number of files in a bucket
+def read_s3_bucket(bucket, folder, assumed_role, region):
     os.environ['AWS_DEFAULT_REGION'] = region
 
     # Create an S3 filesystem object using the assumed role credentials
@@ -36,7 +35,7 @@ def read_s3_and_send_msk(bucket, folder, assumed_role, region, kafka_cluster_arn
             anon=False,
             key=assumed_role['Credentials']['AccessKeyId'],
             secret=assumed_role['Credentials']['SecretAccessKey'],
-            token=assumed_role['Credentials']['SessionToken'],
+            token=assumed_role['Credentials']['SessionToken']
         )
 
     # Specify the S3 path for the Parquet file(s)
@@ -45,46 +44,64 @@ def read_s3_and_send_msk(bucket, folder, assumed_role, region, kafka_cluster_arn
 
     # List the files in the S3 path
     files = s3.ls(s3_path)
+    
+    return files
 
-    for file in files:
-        # Use Pandas to read the Parquet file(s) from S3
-        df = pd.read_parquet(path + file, engine='pyarrow', filesystem='s3://')
-        df.head()
-        #send_data_msk(df, kafka_cluster_arn, kafka_partition_key)
+# Function to create an MSK client with the temporary credentials
+def create_msk_client(credentials):
+    # Create an MSK client with the temporary credentials
+    msk_client = boto3.client('kafka',
+                            aws_access_key_id=credentials['AccessKeyId'],
+                            aws_secret_access_key=credentials['SecretAccessKey'],
+                            aws_session_token=credentials['SessionToken'])
 
-    # Return the dataframe
-    return df
+    return msk_client
 
-# Function that sends pandas dataframe to Kafka
-def send_data_msk(df, kafka_cluster_arn, kafka_partition_key):
-    # Create a new MSK client object using the temporary credentials.
-    msk_client = boto3.client("kafka")
 
+# Function to create a Kafka producer with the MSK client
+def create_kafka_producer(msk_client, kafka_cluster_arn):
     # Create a Kafka producer
     kafka_producer = msk_client.create_producer(
         ClusterArn=kafka_cluster_arn, ClientId="data_replay"
     )
+    return kafka_producer
 
+
+# Function to create a Kafka topic with the MSK client
+def create_kafka_topic(msk_client, kafka_cluster_arn, kafka_topic):
     # Create a Kafka topic
     kafka_topic = msk_client.create_topic(
         ClusterArn=kafka_cluster_arn,
-        Name="data_replay",
-        Partitions=1,
+        TopicName=kafka_topic,
+        NumberOfPartitions=4,
         ReplicationFactor=1,
     )
+    return kafka_topic
 
-    # Loop through the dataframe
-    for index, row in df.iterrows():
-        # Send data to Kafka
-        msk_client.send_command(
-            ClusterArn=kafka_cluster_arn,
-            KafkaBrokerNodeId=kafka_producer["KafkaBrokerNodeId"],
-            KafkaBrokerPort=kafka_producer["KafkaBrokerPort"],
-            KafkaTopic=kafka_topic["Name"],
-            KafkaPartitionKey=kafka_partition_key,
-            KafkaPartitionId=0,
-            KafkaData=json.dumps(row.to_dict()),
-        )
+
+# Read from the S3 folder and return the keys using the temporary credentials
+def read_pq_files_and_send_msk(files, kafka_producer, kafka_topic):
+    # Use Pandas to read the Parquet file(s) from S3
+    for file in files:
+        df = pd.read_parquet(file, engine='pyarrow', filesystem='s3://')
+        #print(df.head(n=10).to_string(index=False))
+        send_data_msk(df, kafka_producer, kafka_topic)
+
+
+# Function to send data to MSK
+def send_data_msk(df, kafka_producer, kafka_topic):
+    # Create a list of records
+    records = df.to_dict(orient="records")
+
+    # Send the records to the Kafka topic
+    response = kafka_producer.send_records(
+        Records=records, 
+        StreamName=kafka_topic['TopicArn']
+    )
+
+    # Print the response
+    print(response)
+
 
 # main function
 def main():
@@ -105,19 +122,55 @@ def main():
 
     # Arguments for Kafka
     parser.add_argument("--kafka_cluster_arn", help="Kafka cluster ARN")
-    parser.add_argument("--kafka_partition_key", help="Kafka partition key")
+
+    # Arguments for threads
+    parser.add_argument("--threads", help="Number of threads", type=int, default=16)
 
     args = parser.parse_args()
+    if args.thread is None or args.thread < 16:
+        # Want a min of 16 threads
+        args.threads = 16
+    
+    # If threads is not a multiple of 16, make it a multiple of 16
+    if args.threads % 16 != 0:
+        args.threads = args.threads + (16 - args.threads % 16)
+
+    # If threads is greater than 256, make it 256
+    if args.threads > 256:
+        args.threads = 256
+
+    logging.info("Arguments: %s", args)
 
     try:
         # Assume role
         assumed_role = assume_role(args.role, args.session)
+        credentials = assumed_role['Credentials']
 
-        # Read S3 folder
-        df = read_s3_and_send_msk(args.bucket, args.folder, assumed_role, args.region, args.kafka_cluster_arn, args.kafka_partition_key)
+        # Create an MSK client with the temporary credentials
+        msk_client = create_msk_client(credentials)
 
-        # Send data to Kafka
-        # send_data_msk(df, args.kafka_cluster_arn, args.kafka_partition_key)
+        # Create a Kafka producer with the MSK client
+        kafka_producer = create_kafka_producer(msk_client, args.kafka_cluster_arn)
+
+        # Create a Kafka topic with the MSK client
+        kafka_topic = create_kafka_topic(msk_client, args.kafka_cluster_arn, "data_replay")
+
+        # Read S3 bucket
+        all_files = read_s3_bucket(args.bucket, args.folder, assumed_role, args.region)
+
+        files_count = len(all_files)
+        files_per_thread = files_count // args.threads
+
+        # Make things concurrent now. Implement thread pool
+        futures = []
+        with ThreadPoolExecutor(max_workers=args.threads) as executor:
+            for i in range(args.threads):
+                start = i * files_per_thread
+                end = start + files_per_thread
+                if i == args.threads - 1:
+                    end = files_count
+                future = executor.submit(read_pq_files_and_send_msk, all_files[start:end], msk_client, kafka_producer, kafka_topic)
+                futures.append(future)
 
     except Exception as e:
         logging.exception("Error in data replay")
