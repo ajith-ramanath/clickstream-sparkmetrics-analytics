@@ -23,7 +23,9 @@ def assume_role(role_arn, role_session_name):
         RoleArn=role_arn, RoleSessionName=role_session_name
     )
 
-    # Return the assumed role 
+    logging.debug("Assumed role: %s", assumed_role_object)
+    
+    # Return the assumed role
     return assumed_role_object
 
 # S3 count number of files in a bucket
@@ -45,6 +47,9 @@ def read_s3_bucket(bucket, folder, assumed_role, region):
     # List the files in the S3 path
     files = s3.ls(s3_path)
     
+    logging.debug("Files: %s", files)
+
+    # Return the number of files
     return files
 
 # Function to create an MSK client with the temporary credentials
@@ -54,7 +59,7 @@ def create_msk_client(credentials):
                             aws_access_key_id=credentials['AccessKeyId'],
                             aws_secret_access_key=credentials['SecretAccessKey'],
                             aws_session_token=credentials['SessionToken'])
-
+    logging.debug("MSK client: %s", msk_client)
     return msk_client
 
 
@@ -64,6 +69,7 @@ def create_kafka_producer(msk_client, kafka_cluster_arn):
     kafka_producer = msk_client.create_producer(
         ClusterArn=kafka_cluster_arn, ClientId="data_replay"
     )
+    logging.debug("Kafka producer: %s", kafka_producer)
     return kafka_producer
 
 
@@ -76,6 +82,7 @@ def create_kafka_topic(msk_client, kafka_cluster_arn, kafka_topic):
         NumberOfPartitions=4,
         ReplicationFactor=1,
     )
+    logging.debug("Kafka topic: %s", kafka_topic)
     return kafka_topic
 
 
@@ -83,8 +90,9 @@ def create_kafka_topic(msk_client, kafka_cluster_arn, kafka_topic):
 def read_pq_files_and_send_msk(files, kafka_producer, kafka_topic):
     # Use Pandas to read the Parquet file(s) from S3
     for file in files:
+        logging.debug("Read file: %s", file)
         df = pd.read_parquet(file, engine='pyarrow', filesystem='s3://')
-        #print(df.head(n=10).to_string(index=False))
+        logging.debug("DF: %s", df.head())
         send_data_msk(df, kafka_producer, kafka_topic)
 
 
@@ -99,8 +107,8 @@ def send_data_msk(df, kafka_producer, kafka_topic):
         StreamName=kafka_topic['TopicArn']
     )
 
-    # Print the response
-    print(response)
+    # Log the response
+    logging.info("Response: %s", response)
 
 
 # main function
@@ -129,14 +137,17 @@ def main():
     args = parser.parse_args()
     if args.thread is None or args.thread < 16:
         # Want a min of 16 threads
+        logging.info("Threads is less than 16. Setting it to 16")
         args.threads = 16
     
     # If threads is not a multiple of 16, make it a multiple of 16
     if args.threads % 16 != 0:
+        logging.info("Threads is not a multiple of 16. Making it a multiple of 16")
         args.threads = args.threads + (16 - args.threads % 16)
 
     # If threads is greater than 256, make it 256
     if args.threads > 256:
+        logging.info("Threads is greater than 256. Setting it to 256")
         args.threads = 256
 
     logging.info("Arguments: %s", args)
